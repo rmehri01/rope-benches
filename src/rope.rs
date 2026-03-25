@@ -168,6 +168,36 @@ impl Rope for ropey::Rope {
     }
 }
 
+impl Rope for zed_rope::Rope {
+    const NAME: &'static str = "zed_rope";
+    const EDITS_USE_BYTE_OFFSETS: bool = true;
+
+    #[inline(always)]
+    fn from_str(s: &str) -> Self {
+        Self::from(s)
+    }
+
+    #[inline(always)]
+    fn insert(&mut self, at: usize, s: &str) {
+        self.replace(at..at, s);
+    }
+
+    #[inline(always)]
+    fn remove(&mut self, range: Range<usize>) {
+        self.replace(range, "");
+    }
+
+    #[inline(always)]
+    fn replace(&mut self, range: Range<usize>, s: &str) {
+        self.replace(range, s);
+    }
+
+    #[inline(always)]
+    fn len(&self) -> usize {
+        self.len()
+    }
+}
+
 impl Rope for xi_rope::Rope {
     const NAME: &'static str = "xi_rope";
     const EDITS_USE_BYTE_OFFSETS: bool = true;

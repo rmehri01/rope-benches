@@ -195,6 +195,98 @@ impl Rope for xi_rope::Rope {
     }
 }
 
+/// A wrapper around [`zed_rope::Rope::bytes()`] that implements `Clone`.
+struct ZedRopeBytes<'a> {
+    rope: &'a zed_rope::Rope,
+    bytes: std::iter::Copied<std::iter::Flatten<zed_rope::Bytes<'a>>>,
+}
+
+impl<'a> ZedRopeBytes<'a> {
+    fn new(rope: &'a zed_rope::Rope) -> Self {
+        Self {
+            rope,
+            bytes: rope.bytes_in_range(0..rope.len()).flatten().copied(),
+        }
+    }
+}
+
+impl Clone for ZedRopeBytes<'_> {
+    fn clone(&self) -> Self {
+        Self::new(self.rope)
+    }
+}
+
+impl Iterator for ZedRopeBytes<'_> {
+    type Item = u8;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.bytes.next()
+    }
+}
+
+/// A wrapper around [`zed_rope::Rope::chars()`] that implements `Clone`.
+struct ZedRopeChars<'a> {
+    rope: &'a zed_rope::Rope,
+    chars: std::iter::FlatMap<
+        zed_rope::Chunks<'a>,
+        std::str::Chars<'a>,
+        fn(&str) -> std::str::Chars<'_>,
+    >,
+}
+
+impl<'a> ZedRopeChars<'a> {
+    fn new(rope: &'a zed_rope::Rope) -> Self {
+        Self {
+            rope,
+            chars: rope.chunks_in_range(0..rope.len()).flat_map(str::chars),
+        }
+    }
+}
+
+impl Clone for ZedRopeChars<'_> {
+    fn clone(&self) -> Self {
+        Self::new(self.rope)
+    }
+}
+
+impl Iterator for ZedRopeChars<'_> {
+    type Item = char;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.chars.next()
+    }
+}
+
+impl Rope for zed_rope::Rope {
+    type Chunks<'a> = zed_rope::Chunks<'a>;
+    type Bytes<'a> = ZedRopeBytes<'a>;
+    type Chars<'a> = ZedRopeChars<'a>;
+    type Line<'a> = &'a str;
+    type Lines<'a> = std::str::Lines<'a>;
+
+    #[inline]
+    fn from_str(s: &str) -> Self {
+        Self::from(s)
+    }
+
+    #[inline]
+    fn chunks(&self) -> Self::Chunks<'_> {
+        self.chunks()
+    }
+
+    #[inline]
+    fn bytes(&self) -> Self::Bytes<'_> {
+        ZedRopeBytes::new(self)
+    }
+
+    #[inline]
+    fn chars(&self) -> Self::Chars<'_> {
+        ZedRopeChars::new(self)
+    }
+}
+
 fn bench_chunks<R: Rope>(group: &mut BenchmarkGroup<WallTime>) {
     #[inline]
     fn bench<R: Rope>(bench: &mut Bencher, s: &str) {
@@ -344,6 +436,21 @@ fn xi_rope_iter_lines(c: &mut Criterion) {
     bench_lines::<xi_rope::Rope>(&mut group);
 }
 
+fn zed_rope_iter_chunks(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_iter_chunks");
+    bench_chunks::<zed_rope::Rope>(&mut group);
+}
+
+fn zed_rope_iter_bytes(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_iter_bytes");
+    bench_bytes::<zed_rope::Rope>(&mut group);
+}
+
+fn zed_rope_iter_chars(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_iter_chars");
+    bench_chars::<zed_rope::Rope>(&mut group);
+}
+
 criterion_group!(
     benches,
     crop_iter_chunks,
@@ -358,6 +465,9 @@ criterion_group!(
     ropey_iter_lines,
     xi_rope_iter_chunks,
     xi_rope_iter_lines,
+    zed_rope_iter_chunks,
+    zed_rope_iter_bytes,
+    zed_rope_iter_chars,
 );
 
 criterion_main!(benches);

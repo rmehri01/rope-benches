@@ -123,6 +123,33 @@ impl Rope for xi_rope::Rope {
     }
 }
 
+impl Rope for zed_rope::Rope {
+    #[inline]
+    fn from_str(s: &str) -> Self {
+        Self::from(s)
+    }
+
+    #[inline]
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    #[inline]
+    fn insert(&mut self, at_byte: usize, text: &str) {
+        self.replace(at_byte..at_byte, text);
+    }
+
+    #[inline]
+    fn delete(&mut self, byte_range: Range<usize>) {
+        self.replace(byte_range, "");
+    }
+
+    #[inline]
+    fn replace(&mut self, byte_range: Range<usize>, text: &str) {
+        self.replace(byte_range, text);
+    }
+}
+
 fn bench_insert<R: Rope>(group: &mut BenchmarkGroup<WallTime>, insert: &str) {
     #[inline(always)]
     fn bench<R: Rope>(bench: &mut Bencher, s: &str, insert: &str) {
@@ -406,6 +433,60 @@ fn jumprope_replace_large(c: &mut Criterion) {
     bench_replace::<jumprope::JumpRope>(&mut group, SMALL);
 }
 
+fn zed_rope_insert_char(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_insert_char");
+    bench_insert::<zed_rope::Rope>(&mut group, "a");
+}
+
+fn zed_rope_insert_sentence(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_insert_sentence");
+    bench_insert::<zed_rope::Rope>(
+        &mut group,
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    );
+}
+
+fn zed_rope_insert_large(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_insert_large");
+    bench_insert::<zed_rope::Rope>(&mut group, SMALL);
+}
+
+fn zed_rope_delete_char(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_delete_char");
+    bench_delete::<zed_rope::Rope>(&mut group, "a".len());
+}
+
+fn zed_rope_delete_sentence(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_delete_sentence");
+    bench_delete::<zed_rope::Rope>(
+        &mut group,
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.".len(),
+    );
+}
+
+fn zed_rope_delete_large(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_delete_large");
+    bench_delete::<zed_rope::Rope>(&mut group, SMALL.len());
+}
+
+fn zed_rope_replace_char(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_replace_char");
+    bench_replace::<zed_rope::Rope>(&mut group, "a");
+}
+
+fn zed_rope_replace_sentence(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_replace_sentence");
+    bench_replace::<zed_rope::Rope>(
+        &mut group,
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    );
+}
+
+fn zed_rope_replace_large(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_replace_large");
+    bench_replace::<zed_rope::Rope>(&mut group, SMALL);
+}
+
 criterion_group!(
     benches,
     crop_insert_char,
@@ -444,6 +525,15 @@ criterion_group!(
     xi_rope_replace_char,
     xi_rope_replace_sentence,
     xi_rope_replace_large,
+    zed_rope_insert_char,
+    zed_rope_insert_sentence,
+    zed_rope_insert_large,
+    zed_rope_delete_char,
+    zed_rope_delete_sentence,
+    zed_rope_delete_large,
+    zed_rope_replace_char,
+    zed_rope_replace_sentence,
+    zed_rope_replace_large,
 );
 
 criterion_main!(benches);

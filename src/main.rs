@@ -46,6 +46,7 @@ fn traces(c: &mut Criterion) {
         bench::<jumprope::JumpRopeBuf>(&mut group, trace);
         bench::<ropey::Rope>(&mut group, trace);
         bench::<xi_rope::Rope>(&mut group, trace);
+        bench::<zed_rope::Rope>(&mut group, trace);
     }
 }
 

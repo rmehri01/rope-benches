@@ -123,6 +123,37 @@ impl Rope for xi_rope::Rope {
     }
 }
 
+impl Rope for zed_rope::Rope {
+    type RopeSlice<'a> = zed_rope::Rope;
+
+    #[inline]
+    fn from_str(s: &str) -> Self {
+        Self::from(s)
+    }
+
+    #[inline]
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    #[inline]
+    fn slice(&self, range: Range<usize>) -> Self::RopeSlice<'_> {
+        self.slice(range)
+    }
+
+    #[inline]
+    fn line_len(&self) -> usize {
+        self.max_point().row as usize
+    }
+
+    #[inline]
+    fn line_slice(&self, range: Range<usize>) -> Self::RopeSlice<'_> {
+        let start = self.point_to_offset(zed_rope::Point::new(range.start as u32, 0));
+        let end = self.point_to_offset(zed_rope::Point::new(range.end as u32, 0));
+        self.slice(start..end)
+    }
+}
+
 fn byte_slice<R: Rope>(group: &mut BenchmarkGroup<WallTime>) {
     #[inline]
     fn bench<R: Rope>(bench: &mut Bencher, s: &str) {
@@ -214,6 +245,16 @@ fn xi_rope_line_slice(c: &mut Criterion) {
     line_slice::<xi_rope::Rope>(&mut group);
 }
 
+fn zed_rope_byte_slice(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_byte_slice");
+    byte_slice::<zed_rope::Rope>(&mut group);
+}
+
+fn zed_rope_line_slice(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_line_slice");
+    line_slice::<zed_rope::Rope>(&mut group);
+}
+
 criterion_group!(
     benches,
     crop_byte_slice,
@@ -224,6 +265,8 @@ criterion_group!(
     ropey_from_slice,
     xi_rope_byte_slice,
     xi_rope_line_slice,
+    zed_rope_byte_slice,
+    zed_rope_line_slice,
 );
 
 criterion_main!(benches);

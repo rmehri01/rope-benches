@@ -9,6 +9,7 @@ criterion = "0.5"
 crop = { git = "https://github.com/noib3/crop" }
 jumprope = { git = "https://github.com/josephg/jumprope-rs" }
 ropey = { git = "https://github.com/cessen/ropey", default-features = false, features = ["simd"] }
+zed-rope = { package = "rope", git = "https://github.com/zed-industries/zed" }
 xi-rope = { git = "https://github.com/xi-editor/xi-editor" }
 
 [[bench]]

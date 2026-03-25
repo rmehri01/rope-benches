@@ -44,6 +44,13 @@ impl Rope for xi_rope::Rope {
     }
 }
 
+impl Rope for zed_rope::Rope {
+    #[inline]
+    fn from_str(s: &str) -> Self {
+        Self::from(s)
+    }
+}
+
 impl RopeBuilder for crop::RopeBuilder {
     type Rope = crop::Rope;
 
@@ -147,6 +154,11 @@ fn xi_rope_from_str(c: &mut Criterion) {
     bench(&mut group, from_str::<xi_rope::Rope>);
 }
 
+fn zed_rope_from_str(c: &mut Criterion) {
+    let mut group = c.benchmark_group("zed_rope_from_str");
+    bench(&mut group, from_str::<zed_rope::Rope>);
+}
+
 fn crop_builder(c: &mut Criterion) {
     let mut group = c.benchmark_group("crop_builder");
     bench(&mut group, rope_builder::<crop::RopeBuilder>);
@@ -168,6 +180,7 @@ criterion_group!(
     jumprope_from_str,
     ropey_from_str,
     xi_rope_from_str,
+    zed_rope_from_str,
     crop_builder,
     ropey_builder,
     xi_rope_builder,
